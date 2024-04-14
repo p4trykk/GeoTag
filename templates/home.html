@@ -1,5 +1,59 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-    HOME
+<div class="container">
+    <div id="map" style="height: 500px;"></div>
+    <p id="coordinates">Współrzędne:</p>
+    <input type="file" id="fileInput" accept="image/*">
+    <button id="uploadButton" class="btn btn-primary">Prześlij plik</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    var map = L.map('map').setView([50.28838, 18.67820], 15);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var marker = L.marker([50.28838, 18.67820]).addTo(map);
+
+    marker.on('dragend', function (event) {
+        var marker = event.target;
+        var position = marker.getLatLng();
+        $('#coordinates').text('Współrzędne: ' + position.lat.toFixed(6) + ', ' + position.lng.toFixed(6)); 
+    });
+
+    $('#uploadButton').click(function() {
+        var fileInput = document.getElementById('fileInput');
+        var file = fileInput.files[0];
+        var formData = new FormData();
+        formData.append('file', file);
+
+        $.ajax({
+            type: 'POST',
+            url: '/upload',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.lat !== undefined && response.lng !== undefined) {
+                    $('#coordinates').text('Współrzędne: ' + response.lat.toFixed(6) + ', ' + response.lng.toFixed(6));
+                    marker.setLatLng([response.lat, response.lng]);
+                    map.setView([response.lat, response.lng], 13);
+                } else {
+                    $('#coordinates').text('Brak danych geograficznych w pliku EXIF.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Wystąpił błąd podczas przesyłania pliku.');
+            }
+        });
+    });
+
+
+</script>
 {% endblock %}
