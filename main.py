@@ -1,7 +1,13 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import exifread
+import os
 
 app = Flask(__name__)
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 @app.route('/')
 def index():
@@ -11,6 +17,7 @@ def index():
 def save_coordinates():
     lat = request.form['lat']
     lng = request.form['lng']
+    print(f"Zapisane współrzędne: {lat}, {lng}")
     return jsonify({'success': True})
 
 @app.route('/upload', methods=['POST'])
@@ -23,12 +30,18 @@ def upload_file():
         return jsonify({'error': 'No selected file'})
 
     if file:
-        lat, lng = get_exif_data(file)
-        return jsonify({'lat': lat, 'lng': lng})
+        filename = file.filename
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        
+        lat, lng = get_exif_data(file_path)
+        return jsonify({'lat': lat, 'lng': lng, 'image_url': f'/uploads/{filename}'})
 
 
-def get_exif_data(file):
-    tags = exifread.process_file(file)
+def get_exif_data(file_path):
+    with open(file_path, 'rb') as f:
+        tags = exifread.process_file(f)
+    #tags = exifread.process_file(file)
     lat_ref = tags.get('GPS GPSLatitudeRef')
     lat = tags.get('GPS GPSLatitude')
     lon_ref = tags.get('GPS GPSLongitudeRef')
@@ -49,6 +62,10 @@ def get_exif_data(file):
     else:
         return None, None
         
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

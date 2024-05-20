@@ -6,6 +6,13 @@
     <p id="coordinates">Współrzędne:</p>
     <input type="file" id="fileInput" accept="image/*">
     <button id="uploadButton" class="btn btn-primary">Prześlij plik</button>
+    <button id="saveButton" class="btn btn-success" style="display: none;">Zapisz współrzędne</button>
+    <div id="uploadedImages" class="mt-4">
+        <h3>Przesłane zdjęcia:</h3>
+        <div id="imagesContainer" class="row">
+            <!-- add imgs -->
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -18,12 +25,13 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    var marker = L.marker([50.28838, 18.67820]).addTo(map);
+    var marker = L.marker([50.28838, 18.67820], {draggable: true}).addTo(map);
 
     marker.on('dragend', function (event) {
         var marker = event.target;
         var position = marker.getLatLng();
         $('#coordinates').text('Współrzędne: ' + position.lat.toFixed(6) + ', ' + position.lng.toFixed(6)); 
+        $('#saveButton').show()
     });
 
     $('#uploadButton').click(function() {
@@ -46,6 +54,7 @@
                 } else {
                     $('#coordinates').text('Brak danych geograficznych w pliku EXIF.');
                 }
+                displayImage(response.image_url, response.lat, response.lng);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
@@ -54,6 +63,39 @@
         });
     });
 
+    $('#saveButton').click(function() {
+        var position = marker.getLatLng();
+        $.ajax({
+            type: 'POST',
+            url: '/save',
+            data: {
+                lat: position.lat,
+                lng: position.lng
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Współrzędne zostały zapisane.');
+                    $('#saveButton').hide();
+                } else {
+                    alert('Wystąpił błąd podczas zapisywania współrzędnych.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Wystąpił błąd podczas zapisywania współrzędnych.');
+            }
+        });
+    });
+
+    function displayImage(imageUrl, lat, lng) {
+        var imageHtml = `
+            <div class="col-md-4 mb-3">
+                <img src="${imageUrl}" class="img-fluid" alt="Przesłane zdjęcie">
+                <p>Współrzędne: ${lat !== undefined && lng !== undefined ? lat.toFixed(6) + ', ' + lng.toFixed(6) : 'Brak danych'}</p>
+            </div>
+        `;
+        $('#imagesContainer').append(imageHtml);
+    }
 
 </script>
 {% endblock %}
