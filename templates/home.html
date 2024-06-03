@@ -10,7 +10,12 @@
     <div id="uploadedImages" class="mt-4">
         <h3>Przesłane zdjęcia:</h3>
         <div id="imagesContainer" class="row">
-            <!-- add imgs -->
+            {% for photo in photos %}
+            <div class="col-md-4 mb-3">
+                <img src="{{ url_for('uploaded_file', filename=photo.filename) }}" class="img-fluid" alt="Przesłane zdjęcie">
+                <p>Współrzędne: {{ photo.lat }}, {{ photo.lng }}</p>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -31,7 +36,9 @@
         var marker = event.target;
         var position = marker.getLatLng();
         $('#coordinates').text('Współrzędne: ' + position.lat.toFixed(6) + ', ' + position.lng.toFixed(6)); 
-        $('#saveButton').show()
+        $('#saveButton').show();
+        $('#saveButton').data('lat', position.lat.toFixed(6));
+        $('#saveButton').data('lng', position.lng.toFixed(6));
     });
 
     $('#uploadButton').click(function() {
@@ -54,7 +61,7 @@
                 } else {
                     $('#coordinates').text('Brak danych geograficznych w pliku EXIF.');
                 }
-                displayImage(response.image_url, response.lat, response.lng);
+                displayImage(response.image_url, response.lat, response.lng, response.photo_id);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
@@ -64,14 +71,18 @@
     });
 
     $('#saveButton').click(function() {
-        var position = marker.getLatLng();
+        var lat = $(this).data('lat');
+        var lng = $(this).data('lng');
+        var photoId = $(this).data('photoId');
         $.ajax({
             type: 'POST',
-            url: '/save',
-            data: {
-                lat: position.lat,
-                lng: position.lng
-            },
+            url: '/update_location',
+            data: JSON.stringify({
+                lat: lat,
+                lng: lng,
+                id: photoId
+            }),
+            contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
                     alert('Współrzędne zostały zapisane.');
@@ -87,7 +98,7 @@
         });
     });
 
-    function displayImage(imageUrl, lat, lng) {
+    function displayImage(imageUrl, lat, lng, photoId) {
         var imageHtml = `
             <div class="col-md-4 mb-3">
                 <img src="${imageUrl}" class="img-fluid" alt="Przesłane zdjęcie">
@@ -95,6 +106,7 @@
             </div>
         `;
         $('#imagesContainer').append(imageHtml);
+        $('#saveButton').data('photoId', photoId);
     }
 
 </script>
