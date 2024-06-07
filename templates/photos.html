@@ -1,0 +1,7 @@
+{% for photo in photos %}
+<div id="photo-{{ photo.id }}" class="col-md-4 mb-3">
+    <img src="{{ url_for('uploaded_file', filename=photo.filename) }}" class="img-fluid" alt="Przesłane zdjęcie">
+    <p>Współrzędne: {{ photo.lat }}, {{ photo.lng }}</p>
+    <button class="btn btn-danger deleteButton" data-photo-id="{{ photo.id }}">Usuń</button>
+</div>
+{% endfor %}

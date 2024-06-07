@@ -61,6 +61,11 @@ def convert_to_degrees(value, ref):
         degrees = -degrees
     return degrees
 
+@app.route('/photos')
+def photos():
+    photos = Photo.query.all()
+    return render_template('photos.html', photos=photos)
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -96,17 +101,42 @@ def uploaded_file(filename):
 @app.route('/update_location', methods=['POST'])
 def update_location():
     data = request.get_json()
-    photo_id = data['photo_id']
-    lat = data['lat']
-    lng = data['lng']
+    app.logger.debug('Received data: %s', data)
+    photo_id = data.get('photo_id')
+    lat = data.get('lat')
+    lng = data.get('lng')
+
+    if photo_id is None:
+        return jsonify({'error': 'Photo ID not provided'}), 400
     
     photo = Photo.query.get(photo_id)
     if photo:
         photo.lat = lat
         photo.lng = lng
         db.session.commit()
-        return jsonify({'success': 'Location updated successfully.'})
+        return jsonify({'success': True})
     return jsonify({'error': 'Photo not found.'}), 404
+
+@app.route('/delete_photo', methods=['POST'])
+def delete_photo():
+    data = request.get_json()
+    photo_id = data.get('photo_id')
+    
+    if photo_id is None:
+        return jsonify({'error': 'Photo ID not provided'}), 400 
+    
+    photo = Photo.query.get(photo_id)
+    if photo:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            
+        db.session.delete(photo)
+        db.session.commit()
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Photo not found'}), 404
+
 
 
 if __name__ == '__main__':

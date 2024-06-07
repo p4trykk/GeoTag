@@ -7,15 +7,22 @@
     <input type="file" id="fileInput" accept="image/*">
     <button id="uploadButton" class="btn btn-primary">Prześlij plik</button>
     <button id="saveButton" class="btn btn-success" style="display: none;">Zapisz współrzędne</button>
+    <div class="mt-4">
+        <h3>Uzupełnij współrzędne dla istniejącego zdjęcia:</h3>
+        <select id="existingPhotos" class="form-select mb-3">
+            <option value="" disabled selected>Wybierz zdjęcie</option>
+            {% for photo in photos %}
+            <option value="{{ photo.id }}">{{ photo.filename }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" id="newLat" class="form-control mb-2" placeholder="Nowa szerokość geograficzna">
+        <input type="text" id="newLng" class="form-control mb-2" placeholder="Nowa długość geograficzna">
+        <button id="updateCoordsButton" class="btn btn-secondary">Aktualizuj współrzędne</button>
+    </div>  
     <div id="uploadedImages" class="mt-4">
         <h3>Przesłane zdjęcia:</h3>
         <div id="imagesContainer" class="row">
-            {% for photo in photos %}
-            <div class="col-md-4 mb-3">
-                <img src="{{ url_for('uploaded_file', filename=photo.filename) }}" class="img-fluid" alt="Przesłane zdjęcie">
-                <p>Współrzędne: {{ photo.lat }}, {{ photo.lng }}</p>
-            </div>
-            {% endfor %}
+            {% include 'photos.html' %}
         </div>
     </div>
 </div>
@@ -61,7 +68,8 @@
                 } else {
                     $('#coordinates').text('Brak danych geograficznych w pliku EXIF.');
                 }
-                displayImage(response.image_url, response.lat, response.lng, response.photo_id);
+                refreshPhotos();
+                // displayImage(response.image_url, response.lat, response.lng, response.photo_id);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
@@ -73,14 +81,15 @@
     $('#saveButton').click(function() {
         var lat = $(this).data('lat');
         var lng = $(this).data('lng');
-        var photoId = $(this).data('photoId');
+        var photoId = $(this).data('photo-id');
+        console.log('Saving coordinates:', photoId, lat, lng);
         $.ajax({
             type: 'POST',
             url: '/update_location',
             data: JSON.stringify({
                 lat: lat,
                 lng: lng,
-                id: photoId
+                photo_id: photoId
             }),
             contentType: 'application/json',
             success: function(response) {
@@ -98,15 +107,84 @@
         });
     });
 
+    $('#updateCoordsButton').click(function() {
+        var photoId = $('#existingPhotos').val();
+        var newLat = $('#newLat').val();
+        var newLng = $('#newLng').val();
+        if (photoId && newLat && newLng) {
+            $.ajax({
+                type: 'POST',
+                url: '/update_location',
+                data: JSON.stringify({
+                    lat: newLat,
+                    lng: newLng,
+                    photo_id: photoId
+                }),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+                        alert('Współrzędne zostały zaktualizowane.');
+                        location.reload();
+                    } else {
+                        alert('Wystąpił błąd podczas aktualizowania współrzędnych.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    alert('Wystąpił błąd podczas aktualizowania współrzędnych.');
+                }
+            });
+        } else {
+            alert('Proszę wypełnić wszystkie pola.');
+        }
+    });
+
+    $('#imagesContainer').on('click', '.deleteButton', function() {
+        var photoId = $(this).data('photo-id');
+        $.ajax({
+            type: 'POST',
+            url: '/delete_photo',
+            data: JSON.stringify({ photo_id: photoId }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    refreshPhotos();
+                } else {
+                    alert('Wystąpił błąd podczas usuwania zdjęcia.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Wystąpił błąd podczas usuwania zdjęcia.');
+            }
+        });
+    });
+
+    function refreshPhotos() {
+        $.ajax({
+            type: 'GET',
+            url: '/photos',
+            success: function(response) {
+                $('#imagesContainer').html(response);
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Wystąpił błąd podczas odświeżania zdjęć.');
+            }
+        });
+    }
+
     function displayImage(imageUrl, lat, lng, photoId) {
         var imageHtml = `
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 mb-3" id="photo-${photoId}">
                 <img src="${imageUrl}" class="img-fluid" alt="Przesłane zdjęcie">
                 <p>Współrzędne: ${lat !== undefined && lng !== undefined ? lat.toFixed(6) + ', ' + lng.toFixed(6) : 'Brak danych'}</p>
+                <button class="btn btn-danger deleteButton" data-photo-id="${photoId}">Usuń</button>
             </div>
         `;
         $('#imagesContainer').append(imageHtml);
-        $('#saveButton').data('photoId', photoId);
+        $('#saveButton').data('photo-id', photoId);
+        refreshPhotos();
     }
 
 </script>
