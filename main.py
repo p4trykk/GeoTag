@@ -61,7 +61,7 @@ def convert_to_degrees(value, ref):
         degrees = -degrees
     return degrees
 
-@app.route('/photos')
+@app.route('/photos', methods=['GET'])
 def photos():
     photos = Photo.query.all()
     return render_template('photos.html', photos=photos)

@@ -7,6 +7,7 @@
     <input type="file" id="fileInput" accept="image/*">
     <button id="uploadButton" class="btn btn-primary">Prześlij plik</button>
     <button id="saveButton" class="btn btn-success" style="display: none;">Zapisz współrzędne</button>
+    <button id="toggleModeButton" class="btn btn-secondary">Przełącz tryb</button>
     <div class="mt-4">
         <h3>Uzupełnij współrzędne dla istniejącego zdjęcia:</h3>
         <select id="existingPhotos" class="form-select mb-3">
@@ -156,6 +157,35 @@
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
                 alert('Wystąpił błąd podczas usuwania zdjęcia.');
+            }
+        });
+    });
+
+    $('#imagesContainer').on('click', '.photo-thumbnail', function() {
+        var lat = $(this).data('lat');
+        var lng = $(this).data('lng');
+        if (lat && lng) {
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng], 13);
+            $('#coordinates').text('Współrzędne: ' + lat + ', ' + lng);
+        }
+    });
+
+    $(document).ready(function() {
+
+        if (localStorage.getItem('nightMode') === 'true') {
+            $('body').addClass('dark');
+            $('#map').addClass('night-mode');
+        }
+
+        $('#toggleModeButton').click(function() {
+            $('body').toggleClass('night-mode');
+            $('#map').toggleClass('night-mode');
+            
+            if ($('body').hasClass('night-mode')) {
+                localStorage.setItem('nightMode', 'true');
+            } else {
+                localStorage.setItem('nightMode', 'false');
             }
         });
     });

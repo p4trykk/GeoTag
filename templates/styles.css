@@ -1,0 +1,19 @@
+
+body.day-mode {
+    background-color: white;
+    color: black;
+}
+
+
+body.night-mode {
+    background-color: rgb(32, 32, 32);
+    color: white;
+}
+
+.night-mode .map-container {
+    background-color: #2e2e2e;
+}
+
+.leaflet-container.night-mode {
+    filter: invert(1) hue-rotate(180deg);
+}
