@@ -1,7 +1,11 @@
 {% for photo in photos %}
-<div id="photo-{{ photo.id }}" class="col-md-4 mb-3">
-    <img src="{{ url_for('uploaded_file', filename=photo.filename) }}" class="img-fluid photo-thumbnail" alt="Przesłane zdjęcie" data-lat="{{ photo.lat }}" data-lng="{{ photo.lng }}">
-    <p>Współrzędne: {{ photo.lat }}, {{ photo.lng }}</p>
-    <button class="btn btn-danger deleteButton" data-photo-id="{{ photo.id }}">Usuń</button>
+<div class="col-md-3">
+    <div class="photo-thumbnail" data-lat="{{ photo.lat }}" data-lng="{{ photo.lng }}" data-photo-id="{{ photo.id }}">
+        <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.filename }}" class="img-fluid">
+        <div class="deleteButton" data-photo-id="{{ photo.id }}">
+            <i class="gg-close-o"></i>
+        </div>
+    </div>
 </div>
 {% endfor %}
+

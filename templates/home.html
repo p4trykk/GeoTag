@@ -7,7 +7,6 @@
     <input type="file" id="fileInput" accept="image/*">
     <button id="uploadButton" class="btn btn-primary">Prześlij plik</button>
     <button id="saveButton" class="btn btn-success" style="display: none;">Zapisz współrzędne</button>
-    <button id="toggleModeButton" class="btn btn-secondary">Przełącz tryb</button>
     <div class="mt-4">
         <h3>Uzupełnij współrzędne dla istniejącego zdjęcia:</h3>
         <select id="existingPhotos" class="form-select mb-3">
@@ -22,7 +21,7 @@
     </div>  
     <div id="uploadedImages" class="mt-4">
         <h3>Przesłane zdjęcia:</h3>
-        <div id="imagesContainer" class="row">
+        <div id="imagesContainer" class="photo-container row">
             {% include 'photos.html' %}
         </div>
     </div>
@@ -173,21 +172,39 @@
 
     $(document).ready(function() {
 
-        if (localStorage.getItem('nightMode') === 'true') {
-            $('body').addClass('dark');
-            $('#map').addClass('night-mode');
-        }
+        // if (localStorage.getItem('nightMode') === 'true') {
+        //     $('body').addClass('dark');
+        //     //$('#map').addClass('night-mode');
+        // }
 
-        $('#toggleModeButton').click(function() {
-            $('body').toggleClass('night-mode');
-            $('#map').toggleClass('night-mode');
+        // $('#toggleModeButton').click(function() {
+        //     $('body').toggleClass('night-mode');
+        //     //$('#map').toggleClass('night-mode');
             
+        //     if ($('body').hasClass('night-mode')) {
+        //         localStorage.setItem('nightMode', 'true');
+        //     } else {
+        //         localStorage.setItem('nightMode', 'false');
+        //     }
+        // });
+        function toggleNightMode() {
+            $('body').toggleClass('night-mode');
             if ($('body').hasClass('night-mode')) {
                 localStorage.setItem('nightMode', 'true');
             } else {
                 localStorage.setItem('nightMode', 'false');
             }
+        }
+
+        // Dodanie obsługi kliknięcia na przycisk przełączania trybu
+        $('#toggleModeButton').click(function() {
+            toggleNightMode();
         });
+
+        // Sprawdzenie, czy tryb nocny jest włączony przy wczytywaniu strony
+        if (localStorage.getItem('nightMode') === 'true') {
+            toggleNightMode(); // Włącz tryb nocny
+        }
     });
 
     function refreshPhotos() {

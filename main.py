@@ -7,7 +7,7 @@ from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///geotag.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -30,7 +30,8 @@ with app.app_context():
 @app.route('/')
 def index():
     photos = Photo.query.all()
-    return render_template('home.html', photos=photos)
+    night_mode = request.cookies.get('nightMode', 'false') == 'true'
+    return render_template('home.html', photos=photos, night_mode=night_mode)
 
 def get_exif_data(file_path):
     with Image.open(file_path) as img:
