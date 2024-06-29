@@ -69,7 +69,6 @@
                     $('#coordinates').text('Brak danych geograficznych w pliku EXIF.');
                 }
                 refreshPhotos();
-                // displayImage(response.image_url, response.lat, response.lng, response.photo_id);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
@@ -172,21 +171,6 @@
 
     $(document).ready(function() {
 
-        // if (localStorage.getItem('nightMode') === 'true') {
-        //     $('body').addClass('dark');
-        //     //$('#map').addClass('night-mode');
-        // }
-
-        // $('#toggleModeButton').click(function() {
-        //     $('body').toggleClass('night-mode');
-        //     //$('#map').toggleClass('night-mode');
-            
-        //     if ($('body').hasClass('night-mode')) {
-        //         localStorage.setItem('nightMode', 'true');
-        //     } else {
-        //         localStorage.setItem('nightMode', 'false');
-        //     }
-        // });
         function toggleNightMode() {
             $('body').toggleClass('night-mode');
             if ($('body').hasClass('night-mode')) {
@@ -196,14 +180,12 @@
             }
         }
 
-        // Dodanie obsługi kliknięcia na przycisk przełączania trybu
         $('#toggleModeButton').click(function() {
             toggleNightMode();
         });
 
-        // Sprawdzenie, czy tryb nocny jest włączony przy wczytywaniu strony
         if (localStorage.getItem('nightMode') === 'true') {
-            toggleNightMode(); // Włącz tryb nocny
+            toggleNightMode();
         }
     });
 
